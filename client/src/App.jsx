@@ -6,6 +6,7 @@ import Dashboard from './pages/Dashboard';
 import RaceCreate from './pages/RaceCreate';
 import StrategyCreate from './pages/StrategyCreate';
 import StrategyCompare from './pages/StrategyCompare';
+import RaceExecution from './pages/RaceExecution';
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -41,7 +42,7 @@ export default function App() {
           <Route path="/races/new" element={<RaceCreate />} />
           <Route path="/races/:id/strategy/new" element={<StrategyCreate />} />
           <Route path="/races/:id/strategy/compare" element={<StrategyCompare />} />
-          <Route path="/races/:id" element={<div className="placeholder">Race Execution (EPIC 4)</div>} />
+          <Route path="/races/:id" element={<RaceExecution />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </main>

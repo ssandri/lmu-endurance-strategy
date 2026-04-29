@@ -36,3 +36,13 @@ export const strategies = {
   calculate: (raceId, data) => request(`/strategies/${raceId}/calculate`, { method: 'POST', body: JSON.stringify(data) }),
   activate: (raceId, strategyId) => request(`/strategies/${raceId}/activate/${strategyId}`, { method: 'POST' }),
 };
+
+export const drivers = {
+  list: (raceId) => request(`/drivers/${raceId}`),
+  reorder: (raceId, order) => request(`/drivers/${raceId}/order`, { method: 'PUT', body: JSON.stringify({ order }) }),
+};
+
+export const stints = {
+  list: (raceId) => request(`/stints/${raceId}`),
+  confirm: (raceId, stintId, data) => request(`/stints/${raceId}/confirm/${stintId}`, { method: 'POST', body: JSON.stringify(data) }),
+};
