@@ -30,7 +30,7 @@ export default function StrategyCreate() {
       setTyreDegFR(String(r.tyre_deg_fr));
       setTyreDegRL(String(r.tyre_deg_rl));
       setTyreDegRR(String(r.tyre_deg_rr));
-      setEstimatedTotalLaps(String(r.estimated_total_laps));
+      setEstimatedTotalLaps(r.estimated_total_laps ? String(r.estimated_total_laps) : '');
     }).catch(err => setError(err.message)).finally(() => setLoading(false));
   }, [id]);
 

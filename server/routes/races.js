@@ -19,8 +19,8 @@ router.get('/', (req, res) => {
 router.post('/', (req, res) => {
   const { name, track, durationHours, fuelPerLap, energyPerLap, tyreDegFL, tyreDegFR, tyreDegRL, tyreDegRR, availableTyres, estimatedTotalLaps, drivers } = req.body;
 
-  if (!name || !track || !estimatedTotalLaps) {
-    return res.status(400).json({ error: 'Name, track, and estimated total laps are required' });
+  if (!name || !track) {
+    return res.status(400).json({ error: 'Name and track are required' });
   }
 
   const result = db.prepare(`
@@ -30,7 +30,7 @@ router.post('/', (req, res) => {
     req.session.userId, name, track,
     durationHours || 12, fuelPerLap || 0, energyPerLap || 0,
     tyreDegFL || 0, tyreDegFR || 0, tyreDegRL || 0, tyreDegRR || 0,
-    availableTyres || 32, estimatedTotalLaps
+    availableTyres || 32, estimatedTotalLaps || null
   );
 
   const raceId = result.lastInsertRowid;

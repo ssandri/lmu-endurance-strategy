@@ -30,7 +30,7 @@ db.exec(`
     tyre_deg_rl REAL NOT NULL DEFAULT 0,
     tyre_deg_rr REAL NOT NULL DEFAULT 0,
     available_tyres INTEGER NOT NULL DEFAULT 32,
-    estimated_total_laps INTEGER NOT NULL,
+    estimated_total_laps INTEGER,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id)
   );
