@@ -22,3 +22,9 @@ export const auth = {
   logout: () => request('/auth/logout', { method: 'POST' }),
   me: () => request('/auth/me'),
 };
+
+export const races = {
+  list: () => request('/races'),
+  get: (id) => request(`/races/${id}`),
+  delete: (id) => request(`/races/${id}`, { method: 'DELETE' }),
+};

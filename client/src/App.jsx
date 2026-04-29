@@ -35,6 +35,8 @@ export default function App() {
       <main>
         <Routes>
           <Route path="/" element={<Dashboard />} />
+          <Route path="/races/new" element={<div className="placeholder">Race Creation (EPIC 2)</div>} />
+          <Route path="/races/:id" element={<div className="placeholder">Race Execution (EPIC 4)</div>} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </main>
