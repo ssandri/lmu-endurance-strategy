@@ -26,5 +26,7 @@ export const auth = {
 export const races = {
   list: () => request('/races'),
   get: (id) => request(`/races/${id}`),
+  create: (data) => request('/races', { method: 'POST', body: JSON.stringify(data) }),
+  update: (id, data) => request(`/races/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
   delete: (id) => request(`/races/${id}`, { method: 'DELETE' }),
 };
