@@ -1,0 +1,7 @@
+{
+  "name": "lmu-endurance-strategy",
+  "version": "0.0.1",
+  "description": "LMU Endurance Strategy — race strategy planning and live execution tracking",
+  "private": true,
+  "scripts": {}
+}
