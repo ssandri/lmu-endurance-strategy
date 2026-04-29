@@ -4,6 +4,8 @@ import { auth } from './api';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import RaceCreate from './pages/RaceCreate';
+import StrategyCreate from './pages/StrategyCreate';
+import StrategyCompare from './pages/StrategyCompare';
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -37,7 +39,8 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/races/new" element={<RaceCreate />} />
-          <Route path="/races/:id/strategy/new" element={<div className="placeholder">Strategy Creation (EPIC 3)</div>} />
+          <Route path="/races/:id/strategy/new" element={<StrategyCreate />} />
+          <Route path="/races/:id/strategy/compare" element={<StrategyCompare />} />
           <Route path="/races/:id" element={<div className="placeholder">Race Execution (EPIC 4)</div>} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
