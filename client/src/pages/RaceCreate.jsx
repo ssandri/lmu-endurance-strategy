@@ -18,7 +18,6 @@ export default function RaceCreate() {
   const [tyreDegRL, setTyreDegRL] = useState('0');
   const [tyreDegRR, setTyreDegRR] = useState('0');
   const [availableTyres, setAvailableTyres] = useState('32');
-  const [estimatedTotalLaps, setEstimatedTotalLaps] = useState('');
   const [drivers, setDrivers] = useState([{ name: '', avgLapTime: '' }]);
   const [error, setError] = useState('');
   const [fieldErrors, setFieldErrors] = useState({});
@@ -52,10 +51,6 @@ export default function RaceCreate() {
     setFieldErrors({});
 
     const errors = {};
-
-    if (!estimatedTotalLaps || parseInt(estimatedTotalLaps) <= 0) {
-      errors.estimatedTotalLaps = 'Estimated total laps is required and must be > 0';
-    }
 
     const validDrivers = [];
     for (let i = 0; i < drivers.length; i++) {
@@ -96,7 +91,6 @@ export default function RaceCreate() {
         tyreDegRL: parseFloat(tyreDegRL),
         tyreDegRR: parseFloat(tyreDegRR),
         availableTyres: parseInt(availableTyres),
-        estimatedTotalLaps: parseInt(estimatedTotalLaps),
         drivers: validDrivers,
       });
       navigate(`/races/${race.id}/strategy/new`);
@@ -136,11 +130,6 @@ export default function RaceCreate() {
           <div className="form-group">
             <label>Duration (hours)</label>
             <input type="number" data-testid="duration-input" value={durationHours} onChange={e => setDurationHours(e.target.value)} min="0" step="0.5" required />
-          </div>
-          <div className="form-group">
-            <label>Estimated Total Laps</label>
-            <input type="number" data-testid="total-laps-input" value={estimatedTotalLaps} onChange={e => setEstimatedTotalLaps(e.target.value)} min="1" required />
-            {fieldErrors.estimatedTotalLaps && <span className="field-error">{fieldErrors.estimatedTotalLaps}</span>}
           </div>
           <div className="form-group">
             <label>Available Tyres</label>

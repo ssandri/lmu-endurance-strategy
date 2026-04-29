@@ -35,7 +35,7 @@ export default function RaceExecution() {
       setRace(raceData);
       setStintList(stintData);
       setDriverList(driverData);
-      setEstimatedLaps(String(raceData.estimated_total_laps));
+      setEstimatedLaps(raceData.estimated_total_laps ? String(raceData.estimated_total_laps) : '');
     } catch (err) {
       setError(err.message);
     } finally {
