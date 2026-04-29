@@ -6,6 +6,7 @@ const path = require('path');
 require('./db/migrate');
 
 const authRoutes = require('./routes/auth');
+const racesRoutes = require('./routes/races');
 const { requireAuth } = require('./middleware/auth');
 
 const app = express();
@@ -21,6 +22,7 @@ app.use(session({
 }));
 
 app.use('/api/auth', authRoutes);
+app.use('/api/races', racesRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });

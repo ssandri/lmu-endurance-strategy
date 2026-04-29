@@ -10,6 +10,14 @@ Given('I am logged in as {string}', async function (email) {
     body: JSON.stringify({ email, password }),
   });
 
+  // Login via API to get cookie
+  const loginRes = await fetch(`${this.apiUrl}/api/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  });
+  this.cookie = loginRes.headers.get('set-cookie');
+
   // Login via UI
   await this.page.goto(`${this.baseUrl}/login`);
   await this.page.fill('input[type="email"]', email);
