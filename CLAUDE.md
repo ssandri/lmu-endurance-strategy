@@ -32,5 +32,13 @@ See `.claude/agents/` for role specifications:
 1. A GitHub issue exists describing a feature (one per epic)
 2. `/po` refines it into acceptance criteria (posted as issue comment)
 3. `/architect` designs the implementation (posted as issue comment)
-4. `/dev` creates a branch, implements, opens a PR
-5. `/qa` reviews the PR, approves or requests changes
+4. **QA writes test scenarios** — Cucumber feature files in `e2e/features/` (definition of done)
+5. `/dev` creates a branch, implements the feature (tests must pass)
+6. **QA implements step definitions** in `e2e/steps/`, runs E2E tests, reviews PR
+
+### Testing
+- **Unit/API tests**: `npm test` (Node.js test runner, `server/tests/`)
+- **E2E tests**: `npm run test:e2e` (Cucumber + Playwright, `e2e/`)
+- **Feature files**: `e2e/features/epic-{n}-*.feature` (BDD scenarios)
+- **Step definitions**: `e2e/steps/epic-{n}-*.js` (Playwright implementations)
+- **Run headed**: `cd e2e && HEADED=true npm test`
