@@ -1,7 +1,24 @@
 {
   "name": "lmu-endurance-strategy",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "LMU Endurance Strategy — race strategy planning and live execution tracking",
   "private": true,
-  "scripts": {}
+  "scripts": {
+    "dev:server": "node --watch server/index.js",
+    "dev:client": "cd client && npm run dev",
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "install:all": "npm install && cd client && npm install",
+    "test": "node --test server/tests/",
+    "db:reset": "rm -f data/lmu.db && node server/db/migrate.js"
+  },
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "better-sqlite3": "^11.0.0",
+    "cors": "^2.8.5",
+    "express": "^4.21.0",
+    "express-session": "^1.18.0"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0"
+  }
 }
