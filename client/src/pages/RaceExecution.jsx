@@ -159,6 +159,25 @@ export default function RaceExecution() {
             </div>
           </div>
 
+          {/* Changeover Table */}
+          <div className="changeover-table" data-testid="changeover-table">
+            <h3>Changeover Schedule</h3>
+            <table className="stint-table">
+              <thead><tr><th>#</th><th>Driver</th><th>Start Lap</th><th>End Lap</th><th>Wall Clock</th></tr></thead>
+              <tbody>
+                {stintList.map(s => (
+                  <tr key={s.id} className={s.confirmed ? 'row-confirmed' : ''}>
+                    <td>{s.stint_number}</td>
+                    <td>{s.driver_name}</td>
+                    <td>{s.planned_start_lap}</td>
+                    <td>{s.confirmed ? s.actual_end_lap : s.planned_end_lap}</td>
+                    <td>{s.estimated_start_time ? new Date(s.estimated_start_time).toLocaleTimeString() : '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
           {/* Current Stint */}
           {currentStint && (
             <div className="current-stint" data-testid="current-stint">
