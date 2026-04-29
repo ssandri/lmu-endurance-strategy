@@ -30,3 +30,9 @@ export const races = {
   update: (id, data) => request(`/races/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
   delete: (id) => request(`/races/${id}`, { method: 'DELETE' }),
 };
+
+export const strategies = {
+  list: (raceId) => request(`/strategies/${raceId}`),
+  calculate: (raceId, data) => request(`/strategies/${raceId}/calculate`, { method: 'POST', body: JSON.stringify(data) }),
+  activate: (raceId, strategyId) => request(`/strategies/${raceId}/activate/${strategyId}`, { method: 'POST' }),
+};
