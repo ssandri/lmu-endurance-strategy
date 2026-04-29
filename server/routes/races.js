@@ -57,6 +57,19 @@ router.get('/:id', (req, res) => {
   res.json({ ...race, drivers, strategies });
 });
 
+router.patch('/:id', (req, res) => {
+  const race = db.prepare('SELECT * FROM races WHERE id = ? AND user_id = ?').get(req.params.id, req.session.userId);
+  if (!race) return res.status(404).json({ error: 'Race not found' });
+
+  const { estimatedTotalLaps } = req.body;
+  if (estimatedTotalLaps !== undefined) {
+    db.prepare('UPDATE races SET estimated_total_laps = ? WHERE id = ?').run(estimatedTotalLaps, race.id);
+  }
+
+  const updated = db.prepare('SELECT * FROM races WHERE id = ?').get(race.id);
+  res.json(updated);
+});
+
 router.delete('/:id', (req, res) => {
   const race = db.prepare('SELECT * FROM races WHERE id = ? AND user_id = ?').get(req.params.id, req.session.userId);
   if (!race) return res.status(404).json({ error: 'Race not found' });

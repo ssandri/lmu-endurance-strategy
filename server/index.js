@@ -8,6 +8,8 @@ require('./db/migrate');
 const authRoutes = require('./routes/auth');
 const racesRoutes = require('./routes/races');
 const strategiesRoutes = require('./routes/strategies');
+const driversRoutes = require('./routes/drivers');
+const stintsRoutes = require('./routes/stints');
 const { requireAuth } = require('./middleware/auth');
 
 const app = express();
@@ -25,6 +27,8 @@ app.use(session({
 app.use('/api/auth', authRoutes);
 app.use('/api/races', racesRoutes);
 app.use('/api/strategies', strategiesRoutes);
+app.use('/api/drivers', driversRoutes);
+app.use('/api/stints', stintsRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
