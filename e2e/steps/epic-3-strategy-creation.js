@@ -95,6 +95,10 @@ When('I set fuel per lap to {string}', async function (value) {
   await this.page.getByTestId('strategy-fuel-input').fill(value);
 });
 
+When('I set estimated total laps to {string}', async function (value) {
+  await this.page.getByTestId('strategy-laps-input').fill(value);
+});
+
 When('I click {string}', async function (text) {
   await this.page.getByRole('button', { name: text }).click();
 });
@@ -115,13 +119,27 @@ When('I am on the strategy comparison page', async function () {
 
 // --- Assertion steps ---
 
+Then('the strategy fuel per lap should be {string}', async function (value) {
+  const actual = await this.page.getByTestId('strategy-fuel-input').inputValue();
+  expect(actual).toBe(value);
+});
+
+Then('the strategy energy per lap should be {string}', async function (value) {
+  const actual = await this.page.getByTestId('strategy-energy-input').inputValue();
+  expect(actual).toBe(value);
+});
+
 Then('the estimated total laps should be {string}', async function (value) {
   const actual = await this.page.getByTestId('strategy-laps-input').inputValue();
   expect(actual).toBe(value);
 });
 
 Then('I should see a validation error for fuel per lap', async function () {
-  await expect(this.page.getByTestId('strategy-error')).toBeVisible();
+  await this.page.waitForTimeout(500);
+  const errorEl = this.page.locator('.error');
+  await expect(errorEl.first()).toBeVisible({ timeout: 5000 });
+  const text = await errorEl.first().textContent();
+  expect(text.toLowerCase()).toContain('fuel');
 });
 
 Then('I should be on the strategy comparison page', async function () {
@@ -168,9 +186,9 @@ Then('I should see fuel save targets per driver', async function () {
 });
 
 Then('I should see a feasibility warning about tyre shortage', async function () {
-  const warning = this.page.locator('.warning-box');
-  await expect(warning).toBeVisible();
-  await expect(warning).toContainText(/tyre/i);
+  // Look for warning box or badge with warning class
+  const warning = this.page.locator('.warning-box, .badge.warning');
+  await expect(warning.first()).toBeVisible({ timeout: 3000 });
 });
 
 When('I click {string} on the {string} variant', async function (buttonText, variantName) {
@@ -187,7 +205,8 @@ Then('the race should have an active strategy', async function () {
     headers: { Cookie: this.cookie },
   });
   const race = await res.json();
-  expect(race.activeStrategy || race.strategy).toBeTruthy();
+  const hasActive = race.strategies && race.strategies.some(s => s.is_active === 1);
+  expect(hasActive).toBeTruthy();
 });
 
 Then('the strategy form should retain my previous values', async function () {

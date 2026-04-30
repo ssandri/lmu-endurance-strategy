@@ -48,7 +48,7 @@ Feature: Race Execution & Live Adjustments
       | energyAdded   | 99.5    |
       | fuelAdded     | 100     |
       | tyresChanged  | 4       |
-      | damageType    | None    |
+      | damageType    | none    |
 
   Scenario: Pit time is calculated not entered manually
     When I confirm stint 1 with:
