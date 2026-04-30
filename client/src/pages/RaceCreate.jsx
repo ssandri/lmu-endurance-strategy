@@ -139,7 +139,7 @@ export default function RaceCreate() {
 
         <div className="form-row">
           <div className="form-group">
-            <label>Fuel/Lap (%)</label>
+            <label>Fuel/Lap (L)</label>
             <input type="number" data-testid="fuel-per-lap-input" value={fuelPerLap} onChange={e => setFuelPerLap(e.target.value)} min="0" max="200" step="0.01" />
           </div>
           <div className="form-group">

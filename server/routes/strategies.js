@@ -18,7 +18,7 @@ router.post('/:raceId/calculate', (req, res) => {
   const { name, startTime, fuelPerLap, energyPerLap, tyreDegFL, tyreDegFR, tyreDegRL, tyreDegRR, estimatedTotalLaps } = req.body;
 
   if (fuelPerLap !== undefined && (fuelPerLap < 0 || fuelPerLap > 200)) {
-    return res.status(400).json({ error: 'Fuel per lap must be 0-200' });
+    return res.status(400).json({ error: 'Fuel per lap must be 0-200 L' });
   }
   if (energyPerLap !== undefined && (energyPerLap < 0 || energyPerLap > 100)) {
     return res.status(400).json({ error: 'Energy per lap must be 0-100' });

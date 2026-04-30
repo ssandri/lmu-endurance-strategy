@@ -74,7 +74,7 @@ export default function StrategyCompare() {
                         <div className="fuel-save-targets" data-testid="fuel-save-targets">
                           <h4>Fuel Save Targets</h4>
                           {v.fuelSaveTargets.map(t => (
-                            <div key={t.driverId}>{t.driverName}: {t.targetFuelPerLap.toFixed(2)}%/lap fuel, max pace loss {t.maxPaceLoss}</div>
+                            <div key={t.driverId}>{t.driverName}: {t.targetFuelPerLap.toFixed(2)} L/lap fuel, max pace loss {t.maxPaceLoss}</div>
                           ))}
                         </div>
                       )}
