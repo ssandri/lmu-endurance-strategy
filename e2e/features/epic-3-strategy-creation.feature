@@ -26,12 +26,13 @@ Feature: Strategy Creation (Two-Step Flow)
 
   Scenario: Strategy form pre-fills from race parameters
     When I navigate to the strategy creation page
-    Then the fuel per lap should be "3.5"
-    And the energy per lap should be "2.1"
+    Then the strategy fuel per lap should be "3.5"
+    And the strategy energy per lap should be "2.1"
     And the estimated total laps should be "380"
 
   Scenario: Validation blocks calculation with invalid inputs
     When I navigate to the strategy creation page
+    And I set estimated total laps to "380"
     And I set fuel per lap to "250"
     And I click "Calculate Strategy"
     Then I should see a validation error for fuel per lap

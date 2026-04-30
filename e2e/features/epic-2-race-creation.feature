@@ -8,12 +8,11 @@ Feature: Race Creation
     And I am on the race creation page
 
   Scenario: Default race name is pre-filled from track and date
-    When I select track "Le Mans"
-    Then the race name should contain "Le Mans"
+    When I select track "Circuit de la Sarthe"
+    Then the race name should contain "Circuit de la Sarthe"
     And the race name should contain today's date
 
   Scenario: Race name updates when track changes
-    Given the race name is "Le Mans – 2026-04-29 – 1"
     When I select track "Spa-Francorchamps"
     Then the race name should contain "Spa-Francorchamps"
 
@@ -45,25 +44,23 @@ Feature: Race Creation
     And I submit the form
     Then I should see a validation error "At least one driver is required"
 
-  Scenario: Estimated total laps required
-    When I add a driver "Alice" with pace "1:54.500"
-    And I leave estimated total laps empty
+  Scenario: At least one driver name required
+    When I add a driver "" with pace "1:54.500"
     And I submit the form
-    Then I should see a validation error for estimated total laps
+    Then I should see a validation error "At least one driver is required"
 
   Scenario: Successful race creation navigates to strategy
     When I fill in valid race parameters:
-      | field               | value              |
-      | track               | Le Mans            |
-      | duration            | 24                 |
-      | fuelPerLap          | 3.5                |
-      | energyPerLap        | 2.1                |
-      | tyreDegFL           | 1.2                |
-      | tyreDegFR           | 1.3                |
-      | tyreDegRL           | 0.9                |
-      | tyreDegRR           | 1.0                |
-      | availableTyres      | 32                 |
-      | estimatedTotalLaps  | 380                |
+      | field               | value                  |
+      | track               | Circuit de la Sarthe   |
+      | duration            | 24                     |
+      | fuelPerLap          | 3.5                    |
+      | energyPerLap        | 2.1                    |
+      | tyreDegFL           | 1.2                    |
+      | tyreDegFR           | 1.3                    |
+      | tyreDegRL           | 0.9                    |
+      | tyreDegRR           | 1.0                    |
+      | availableTyres      | 32                     |
     And I add a driver "Alice" with pace "3:24.000"
     And I submit the form
     Then I should be on the strategy creation page

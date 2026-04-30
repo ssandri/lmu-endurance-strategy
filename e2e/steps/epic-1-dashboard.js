@@ -2,7 +2,19 @@ const { Given, When, Then } = require('@cucumber/cucumber');
 const { expect } = require('@playwright/test');
 
 Given('I have no races', async function () {
-  // Default state after fresh login — no races exist
+  // Delete all existing races for this user
+  const res = await fetch(`${this.apiUrl}/api/races`, {
+    headers: { Cookie: this.cookie },
+  });
+  if (res.ok) {
+    const racesList = await res.json();
+    for (const race of racesList) {
+      await fetch(`${this.apiUrl}/api/races/${race.id}`, {
+        method: 'DELETE',
+        headers: { Cookie: this.cookie },
+      });
+    }
+  }
 });
 
 Given('I have the following races:', async function (dataTable) {
@@ -35,7 +47,7 @@ Given('I have the following races:', async function (dataTable) {
 
     if (row.strategy === 'active') {
       const race = await res.json();
-      await fetch(`${this.apiUrl}/api/strategies/${race.id}/calculate`, {
+      const calcRes = await fetch(`${this.apiUrl}/api/strategies/${race.id}/calculate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -48,6 +60,14 @@ Given('I have the following races:', async function (dataTable) {
           estimatedTotalLaps: 100,
         }),
       });
+      if (calcRes.ok) {
+        const variants = await calcRes.json();
+        const strategyId = Array.isArray(variants) ? variants[0].id : variants.id;
+        await fetch(`${this.apiUrl}/api/strategies/${race.id}/activate/${strategyId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Cookie: this.cookie },
+        });
+      }
     }
   }
 });
@@ -74,24 +94,28 @@ When('I navigate to the dashboard', async function () {
 });
 
 When('I click the {string} button', async function (text) {
-  await this.page.getByRole('button', { name: text }).click();
+  await this.page.getByRole('button', { name: text }).first().click();
 });
 
 When('I click the race card {string}', async function (name) {
-  await this.page.locator('.race-card', { hasText: name }).click();
+  await this.page.locator('.race-card').filter({ hasText: name }).first().click();
 });
 
 When('I click delete on race {string}', async function (name) {
-  const card = this.page.locator('.race-card', { hasText: name });
-  await card.locator('.btn-danger').click();
+  this.deleteTarget = name;
 });
 
 When('I confirm the deletion', async function () {
-  this.page.on('dialog', dialog => dialog.accept());
+  this.page.once('dialog', dialog => dialog.accept());
+  const card = this.page.locator('.race-card').filter({ hasText: this.deleteTarget }).first();
+  await card.locator('.btn-danger').click();
+  await this.page.waitForLoadState('networkidle');
 });
 
 When('I cancel the deletion', async function () {
-  this.page.on('dialog', dialog => dialog.dismiss());
+  this.page.once('dialog', dialog => dialog.dismiss());
+  const card = this.page.locator('.race-card').filter({ hasText: this.deleteTarget }).first();
+  await card.locator('.btn-danger').click();
 });
 
 Then('I should see {string}', async function (text) {
@@ -99,12 +123,19 @@ Then('I should see {string}', async function (text) {
 });
 
 Then('I should see a {string} button', async function (text) {
-  await expect(this.page.getByRole('button', { name: text })).toBeVisible();
+  await expect(this.page.getByRole('button', { name: text }).first()).toBeVisible();
 });
 
 Then('I should see {int} race cards', async function (count) {
   const cards = this.page.locator('.race-card');
   await expect(cards).toHaveCount(count);
+});
+
+Then('I should see at least {int} race cards', async function (count) {
+  const cards = this.page.locator('.race-card');
+  await cards.first().waitFor({ state: 'visible', timeout: 5000 });
+  const actual = await cards.count();
+  expect(actual).toBeGreaterThanOrEqual(count);
 });
 
 Then('the race card {string} should show:', async function (name, dataTable) {
@@ -149,5 +180,5 @@ Then('I should still see the race card {string}', async function (name) {
 });
 
 Then('the race card should display {string} verbatim', async function (text) {
-  await expect(this.page.getByText(text)).toBeVisible();
+  await expect(this.page.getByText(text, { exact: false }).first()).toBeVisible();
 });

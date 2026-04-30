@@ -3,6 +3,8 @@ const { expect } = require('@playwright/test');
 
 Given('I am on the race creation page', async function () {
   await this.page.goto(`${this.baseUrl}/races/new`);
+  await this.page.waitForLoadState('networkidle');
+  await this.page.getByTestId('race-create-page').waitFor({ state: 'visible', timeout: 5000 });
 });
 
 When('I select track {string}', async function (track) {
@@ -38,7 +40,7 @@ When('I clear all driver names', async function () {
 });
 
 When('I leave estimated total laps empty', async function () {
-  await this.page.getByTestId('total-laps-input').fill('');
+  // Field removed from race creation form — no-op
 });
 
 When('I submit the form', async function () {
@@ -56,11 +58,10 @@ When('I fill in valid race parameters:', async function (dataTable) {
   if (params.tyreDegRL) await this.page.getByTestId('tyre-deg-rl-input').fill(params.tyreDegRL);
   if (params.tyreDegRR) await this.page.getByTestId('tyre-deg-rr-input').fill(params.tyreDegRR);
   if (params.availableTyres) await this.page.getByTestId('available-tyres-input').fill(params.availableTyres);
-  if (params.estimatedTotalLaps) await this.page.getByTestId('total-laps-input').fill(params.estimatedTotalLaps);
 });
 
 When('I fill in the required fields', async function () {
-  await this.page.getByTestId('total-laps-input').fill('100');
+  // No extra fields needed — just ensure track and duration are set (defaults are fine)
 });
 
 Then('the race name should contain {string}', async function (text) {
@@ -107,7 +108,7 @@ Then('I should see {int} driver rows', async function (count) {
 });
 
 Then('I should see a validation error for lap time format', async function () {
-  await expect(this.page.locator('.field-error')).toBeVisible();
+  await expect(this.page.locator('.field-error', { hasText: 'Invalid format' })).toBeVisible();
 });
 
 Then('I should see a validation error {string}', async function (text) {
