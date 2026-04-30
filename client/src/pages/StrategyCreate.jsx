@@ -42,7 +42,7 @@ export default function StrategyCreate() {
     const energy = parseFloat(energyPerLap);
     const laps = parseInt(estimatedTotalLaps);
 
-    if (fuel < 0 || fuel > 200) { setError('Fuel per lap must be 0-200'); return; }
+    if (fuel < 0 || fuel > 200) { setError('Fuel per lap must be 0-200 L'); return; }
     if (energy < 0 || energy > 100) { setError('Energy per lap must be 0-100'); return; }
     if (!laps || laps <= 0) { setError('Estimated total laps must be > 0'); return; }
 
@@ -89,7 +89,7 @@ export default function StrategyCreate() {
 
         <div className="form-row">
           <div className="form-group">
-            <label>Fuel/Lap (%)</label>
+            <label>Fuel/Lap (L)</label>
             <input type="number" data-testid="strategy-fuel-input" value={fuelPerLap} onChange={e => setFuelPerLap(e.target.value)} min="0" max="200" step="0.01" />
           </div>
           <div className="form-group">
