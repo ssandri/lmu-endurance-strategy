@@ -27,7 +27,8 @@ export default function StrategyCreate() {
   const [tyreDegRR, setTyreDegRR] = useState('');
   const [estimatedTotalLaps, setEstimatedTotalLaps] = useState('');
   const [tyreMultiplicity, setTyreMultiplicity] = useState(1);
-  const [tyreMultiplicityRecommendation, setTyreMultiplicityRecommendation] = useState(null);
+  const [tyreMultiplicityRecommendation, setTyreMultiplicityRecommendation] = useState(restoredValues?.tyreMultiplicityRecommendation ?? null);
+  const [derivedLapsNull, setDerivedLapsNull] = useState(false);
   const [error, setError] = useState('');
   const [calculating, setCalculating] = useState(false);
 
@@ -62,6 +63,7 @@ export default function StrategyCreate() {
           setTyreDegRR(String(r.tyre_deg_rr));
 
           const derived = deriveLaps(driverList, r.duration_hours);
+          if (derived === null) setDerivedLapsNull(true);
           const lapsValue = derived ? String(derived) : (r.estimated_total_laps ? String(r.estimated_total_laps) : '');
           setEstimatedTotalLaps(lapsValue);
         })
@@ -96,10 +98,8 @@ export default function StrategyCreate() {
         estimatedTotalLaps: laps,
         tyreMultiplicity: parseInt(tyreMultiplicity),
       });
-      if (variants.length > 0 && variants[0].tyreMultiplicityRecommendation) {
-        setTyreMultiplicityRecommendation(variants[0].tyreMultiplicityRecommendation);
-      }
-      navigate(`/races/${id}/strategy/compare`, { state: { variants, formValues: { name, startTime, fuelPerLap, energyPerLap, tyreDegFL, tyreDegFR, tyreDegRL, tyreDegRR, estimatedTotalLaps, tyreMultiplicity } } });
+      const recommendation = (variants.length > 0 && variants[0].tyreMultiplicityRecommendation) ? variants[0].tyreMultiplicityRecommendation : null;
+      navigate(`/races/${id}/strategy/compare`, { state: { variants, formValues: { name, startTime, fuelPerLap, energyPerLap, tyreDegFL, tyreDegFR, tyreDegRL, tyreDegRR, estimatedTotalLaps, tyreMultiplicity, tyreMultiplicityRecommendation: recommendation } } });
     } catch (err) {
       setError(err.message);
     } finally {
@@ -139,6 +139,7 @@ export default function StrategyCreate() {
           <div className="form-group">
             <label>Est. Total Laps</label>
             <input type="number" data-testid="strategy-laps-input" value={estimatedTotalLaps} onChange={e => setEstimatedTotalLaps(e.target.value)} min="1" />
+            {derivedLapsNull && <span className="warning" data-testid="derived-laps-warning">No valid driver paces — enter laps manually</span>}
           </div>
         </div>
 
@@ -156,7 +157,6 @@ export default function StrategyCreate() {
               <option value={1}>Every stop</option>
               <option value={2}>Every 2nd stop</option>
               <option value={3}>Every 3rd stop</option>
-              <option value={4}>Every 4th stop</option>
             </select>
             {tyreMultiplicityRecommendation && (
               <span className="hint" data-testid="tyre-multiplicity-hint">

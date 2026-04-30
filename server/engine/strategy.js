@@ -97,9 +97,6 @@ function generateVariants({ race, drivers, startTime, overrides = {} }) {
   const fuelSavePlan = generateStintPlan({ ...commonOpts, stintLength: fuelSaveStintLength });
   const mixedPlan = generateStintPlan({ ...commonOpts, stintLength: mixedStintLength });
 
-  const pitTimePerStop = calculatePitTime({ fuelAdded: 100, tyresChanged: 4, damageType: 'none' });
-  const pitTimeNoTyres = calculatePitTime({ fuelAdded: 100, tyresChanged: 0, damageType: 'none' });
-
   function computeTotalPitTimeSec(plan) {
     return plan.stints.reduce((sum, s) => sum + (s.estimatedPitTime || 0), 0);
   }
@@ -124,6 +121,7 @@ function generateVariants({ race, drivers, startTime, overrides = {} }) {
       totalPitTimeSec: computeTotalPitTimeSec(normalPlan),
       requiredTyreSets: computeRequiredTyreSets(normalPlan),
       availableTyres,
+      tyreMultiplicity,
       tyreMultiplicityRecommendation,
     },
     {
@@ -137,6 +135,7 @@ function generateVariants({ race, drivers, startTime, overrides = {} }) {
       totalPitTimeSec: computeTotalPitTimeSec(fuelSavePlan),
       requiredTyreSets: computeRequiredTyreSets(fuelSavePlan),
       availableTyres,
+      tyreMultiplicity,
       tyreMultiplicityRecommendation,
       fuelSaveTargets: drivers.map(d => ({
         driverId: d.id,
@@ -157,6 +156,7 @@ function generateVariants({ race, drivers, startTime, overrides = {} }) {
       totalPitTimeSec: computeTotalPitTimeSec(mixedPlan),
       requiredTyreSets: computeRequiredTyreSets(mixedPlan),
       availableTyres,
+      tyreMultiplicity,
       tyreMultiplicityRecommendation,
     },
   ];
