@@ -14,12 +14,13 @@ function calculateStintLength({ fuelPerLap, energyPerLap, tyreDegFL, tyreDegFR, 
   return Math.min(...limits);
 }
 
-function generateStintPlan({ drivers, estimatedTotalLaps, stintLength, startLap = 1, availableTyres, avgPitFuel = 100, startTime = null, avgLapTimeMs = null }) {
+function generateStintPlan({ drivers, estimatedTotalLaps, stintLength, startLap = 1, availableTyres, avgPitFuel = 100, startTime = null, avgLapTimeMs = null, tyreMultiplicity = 1 }) {
   const stints = [];
   let currentLap = startLap;
   let driverIndex = 0;
   let tyresUsed = 0;
   let stintNumber = 1;
+  let pitStopIndex = 0;
 
   const totalLaps = Math.min(estimatedTotalLaps, MAX_LAPS);
   const effectiveStintLength = Math.max(1, stintLength);
@@ -31,7 +32,8 @@ function generateStintPlan({ drivers, estimatedTotalLaps, stintLength, startLap 
     const endLap = currentLap + lapsThisStint - 1;
 
     const isLastStint = endLap >= totalLaps;
-    const tyresChanged = isLastStint ? 0 : 4;
+    const changeTyresThisPit = !isLastStint && (pitStopIndex % tyreMultiplicity === 0);
+    const tyresChanged = changeTyresThisPit ? 4 : 0;
     if (tyresChanged > 0) tyresUsed += tyresChanged;
 
     const pitTime = isLastStint ? 0 : calculatePitTime({ fuelAdded: avgPitFuel, tyresChanged, damageType: 'none' });
@@ -60,6 +62,7 @@ function generateStintPlan({ drivers, estimatedTotalLaps, stintLength, startLap 
     currentLap = endLap + 1;
     driverIndex++;
     stintNumber++;
+    if (!isLastStint) pitStopIndex++;
   }
 
   return { stints, tyresUsed, feasible: tyresUsed <= availableTyres };
@@ -77,6 +80,7 @@ function generateVariants({ race, drivers, startTime, overrides = {} }) {
 
   const estimatedTotalLaps = overrides.estimatedTotalLaps ?? race.estimated_total_laps;
   const availableTyres = race.available_tyres;
+  const tyreMultiplicity = overrides.tyreMultiplicity ?? 1;
 
   const avgLapTimeMs = drivers.length > 0
     ? drivers.reduce((sum, d) => sum + d.avg_lap_time_ms, 0) / drivers.length
@@ -87,11 +91,26 @@ function generateVariants({ race, drivers, startTime, overrides = {} }) {
   const fuelSaveStintLength = calculateStintLength(fuelSaveParams);
   const mixedStintLength = Math.floor((normalStintLength + fuelSaveStintLength) / 2);
 
-  const commonOpts = { drivers, estimatedTotalLaps, availableTyres, startTime, avgLapTimeMs };
+  const commonOpts = { drivers, estimatedTotalLaps, availableTyres, startTime, avgLapTimeMs, tyreMultiplicity };
 
   const normalPlan = generateStintPlan({ ...commonOpts, stintLength: normalStintLength });
   const fuelSavePlan = generateStintPlan({ ...commonOpts, stintLength: fuelSaveStintLength });
   const mixedPlan = generateStintPlan({ ...commonOpts, stintLength: mixedStintLength });
+
+  const pitTimePerStop = calculatePitTime({ fuelAdded: 100, tyresChanged: 4, damageType: 'none' });
+  const pitTimeNoTyres = calculatePitTime({ fuelAdded: 100, tyresChanged: 0, damageType: 'none' });
+
+  function computeTotalPitTimeSec(plan) {
+    return plan.stints.reduce((sum, s) => sum + (s.estimatedPitTime || 0), 0);
+  }
+
+  function computeRequiredTyreSets(plan) {
+    return plan.tyresUsed / 4;
+  }
+
+  const tyreMultiplicityRecommendation = availableTyres > 0
+    ? Math.ceil((normalPlan.stints.length - 1) / (availableTyres / 4))
+    : 1;
 
   const variants = [
     {
@@ -102,6 +121,10 @@ function generateVariants({ race, drivers, startTime, overrides = {} }) {
       estimatedTotalLaps,
       pitStops: normalPlan.stints.length - 1,
       avgPace: avgLapTimeMs,
+      totalPitTimeSec: computeTotalPitTimeSec(normalPlan),
+      requiredTyreSets: computeRequiredTyreSets(normalPlan),
+      availableTyres,
+      tyreMultiplicityRecommendation,
     },
     {
       name: 'Fuel Save',
@@ -111,6 +134,10 @@ function generateVariants({ race, drivers, startTime, overrides = {} }) {
       estimatedTotalLaps,
       pitStops: fuelSavePlan.stints.length - 1,
       avgPace: avgLapTimeMs ? Math.round(avgLapTimeMs * 1.02) : null,
+      totalPitTimeSec: computeTotalPitTimeSec(fuelSavePlan),
+      requiredTyreSets: computeRequiredTyreSets(fuelSavePlan),
+      availableTyres,
+      tyreMultiplicityRecommendation,
       fuelSaveTargets: drivers.map(d => ({
         driverId: d.id,
         driverName: d.name,
@@ -127,6 +154,10 @@ function generateVariants({ race, drivers, startTime, overrides = {} }) {
       estimatedTotalLaps,
       pitStops: mixedPlan.stints.length - 1,
       avgPace: avgLapTimeMs ? Math.round(avgLapTimeMs * 1.01) : null,
+      totalPitTimeSec: computeTotalPitTimeSec(mixedPlan),
+      requiredTyreSets: computeRequiredTyreSets(mixedPlan),
+      availableTyres,
+      tyreMultiplicityRecommendation,
     },
   ];
 
@@ -142,6 +173,9 @@ function recalculateFromLap({ race, drivers, strategy, confirmedStints, currentL
     tyreDegRL: strategy.tyre_deg_rl || race.tyre_deg_rl,
     tyreDegRR: strategy.tyre_deg_rr || race.tyre_deg_rr,
   };
+
+  const strategyData = strategy.data ? (typeof strategy.data === 'string' ? JSON.parse(strategy.data) : strategy.data) : {};
+  const tyreMultiplicity = strategyData.tyreMultiplicity ?? 1;
 
   const estimatedTotalLaps = race.estimated_total_laps;
   const stintLength = calculateStintLength(params);
@@ -170,6 +204,7 @@ function recalculateFromLap({ race, drivers, strategy, confirmedStints, currentL
     availableTyres: remainingTyres,
     startTime,
     avgLapTimeMs,
+    tyreMultiplicity,
   });
 
   plan.stints = plan.stints.map((s, i) => ({

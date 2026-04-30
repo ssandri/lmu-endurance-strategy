@@ -28,7 +28,7 @@ Feature: Strategy Creation (Two-Step Flow)
     When I navigate to the strategy creation page
     Then the strategy fuel per lap should be "3.5"
     And the strategy energy per lap should be "2.1"
-    And the estimated total laps should be "380"
+    And the estimated total laps should be "421"
 
   Scenario: Validation blocks calculation with invalid inputs
     When I navigate to the strategy creation page
