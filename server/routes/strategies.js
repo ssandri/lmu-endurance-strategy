@@ -15,7 +15,8 @@ router.post('/:raceId/calculate', (req, res) => {
     return res.status(400).json({ error: 'Race must have at least one driver' });
   }
 
-  const { name, startTime, fuelPerLap, energyPerLap, tyreDegFL, tyreDegFR, tyreDegRL, tyreDegRR, estimatedTotalLaps } = req.body;
+  const { name, startTime, fuelPerLap, energyPerLap, tyreDegFL, tyreDegFR, tyreDegRL, tyreDegRR, tyreMultiplicity } = req.body;
+  let { estimatedTotalLaps } = req.body;
 
   if (fuelPerLap !== undefined && (fuelPerLap < 0 || fuelPerLap > 200)) {
     return res.status(400).json({ error: 'Fuel per lap must be 0-200 L' });
@@ -29,7 +30,16 @@ router.post('/:raceId/calculate', (req, res) => {
       return res.status(400).json({ error: 'Tyre wear must be 0-100' });
     }
   }
-  if (estimatedTotalLaps !== undefined && estimatedTotalLaps <= 0) {
+
+  if (estimatedTotalLaps === undefined || estimatedTotalLaps === null) {
+    const avgLapTimeMs = drivers.reduce((sum, d) => sum + d.avg_lap_time_ms, 0) / drivers.length;
+    if (!avgLapTimeMs || avgLapTimeMs <= 0) {
+      return res.status(400).json({ error: 'Cannot derive estimated total laps: no valid driver paces' });
+    }
+    estimatedTotalLaps = Math.floor(race.duration_hours * 3600 * 1000 / avgLapTimeMs);
+  }
+
+  if (estimatedTotalLaps <= 0) {
     return res.status(400).json({ error: 'Estimated total laps must be > 0' });
   }
 
@@ -41,6 +51,7 @@ router.post('/:raceId/calculate', (req, res) => {
   if (tyreDegRL !== undefined) overrides.tyreDegRL = tyreDegRL;
   if (tyreDegRR !== undefined) overrides.tyreDegRR = tyreDegRR;
   if (estimatedTotalLaps !== undefined) overrides.estimatedTotalLaps = estimatedTotalLaps;
+  if (tyreMultiplicity !== undefined) overrides.tyreMultiplicity = tyreMultiplicity;
 
   const variants = generateVariants({ race, drivers, startTime, overrides });
 
@@ -60,7 +71,7 @@ router.post('/:raceId/calculate', (req, res) => {
       overrides.tyreDegFR ?? race.tyre_deg_fr,
       overrides.tyreDegRL ?? race.tyre_deg_rl,
       overrides.tyreDegRR ?? race.tyre_deg_rr,
-      overrides.estimatedTotalLaps ?? race.estimated_total_laps,
+      estimatedTotalLaps,
       JSON.stringify(v)
     );
     return { id: result.lastInsertRowid, ...v };
