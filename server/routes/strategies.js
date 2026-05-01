@@ -44,6 +44,11 @@ router.post('/:raceId/calculate', (req, res) => {
 
   const variants = generateVariants({ race, drivers, startTime, overrides });
 
+  const feasibleVariants = variants.filter(v => v.feasible);
+  if (feasibleVariants.length === 0) {
+    return res.status(422).json({ error: 'No feasible strategy exists with available tyres', allInfeasible: true });
+  }
+
   const strategyName = name || `Strategy ${new Date().toISOString().slice(0, 16)}`;
 
   const insertStrategy = db.prepare(`
@@ -51,7 +56,7 @@ router.post('/:raceId/calculate', (req, res) => {
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
-  const savedVariants = variants.map(v => {
+  const savedVariants = feasibleVariants.map(v => {
     const result = insertStrategy.run(
       race.id, strategyName, v.name, startTime || null,
       overrides.fuelPerLap ?? race.fuel_per_lap,

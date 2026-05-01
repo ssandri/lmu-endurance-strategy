@@ -1,10 +1,19 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { races, strategies } from '../api';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
+import { races, strategies, drivers as driversApi } from '../api';
+
+function deriveLaps(driverList, durationHours) {
+  if (!driverList || driverList.length === 0) return null;
+  const avg = driverList.reduce((sum, d) => sum + d.avg_lap_time_ms, 0) / driverList.length;
+  if (!avg || avg <= 0) return null;
+  return Math.floor(durationHours * 3600 * 1000 / avg);
+}
 
 export default function StrategyCreate() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const restoredValues = location.state?.formValues || null;
   const [race, setRace] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -17,21 +26,47 @@ export default function StrategyCreate() {
   const [tyreDegRL, setTyreDegRL] = useState('');
   const [tyreDegRR, setTyreDegRR] = useState('');
   const [estimatedTotalLaps, setEstimatedTotalLaps] = useState('');
+  const [derivedLapsNull, setDerivedLapsNull] = useState(false);
   const [error, setError] = useState('');
   const [calculating, setCalculating] = useState(false);
 
   useEffect(() => {
-    races.get(id).then(r => {
-      setRace(r);
-      setName(`${r.name} Strategy`);
-      setFuelPerLap(String(r.fuel_per_lap));
-      setEnergyPerLap(String(r.energy_per_lap));
-      setTyreDegFL(String(r.tyre_deg_fl));
-      setTyreDegFR(String(r.tyre_deg_fr));
-      setTyreDegRL(String(r.tyre_deg_rl));
-      setTyreDegRR(String(r.tyre_deg_rr));
-      setEstimatedTotalLaps(r.estimated_total_laps ? String(r.estimated_total_laps) : '');
-    }).catch(err => setError(err.message)).finally(() => setLoading(false));
+    if (restoredValues) {
+      races.get(id)
+        .then(r => {
+          setRace(r);
+          setName(restoredValues.name ?? `${r.name} Strategy`);
+          setStartTime(restoredValues.startTime ?? '');
+          setFuelPerLap(restoredValues.fuelPerLap ?? String(r.fuel_per_lap));
+          setEnergyPerLap(restoredValues.energyPerLap ?? String(r.energy_per_lap));
+          setTyreDegFL(restoredValues.tyreDegFL ?? String(r.tyre_deg_fl));
+          setTyreDegFR(restoredValues.tyreDegFR ?? String(r.tyre_deg_fr));
+          setTyreDegRL(restoredValues.tyreDegRL ?? String(r.tyre_deg_rl));
+          setTyreDegRR(restoredValues.tyreDegRR ?? String(r.tyre_deg_rr));
+          setEstimatedTotalLaps(restoredValues.estimatedTotalLaps ?? '');
+        })
+        .catch(err => setError(err.message))
+        .finally(() => setLoading(false));
+    } else {
+      Promise.all([races.get(id), driversApi.list(id)])
+        .then(([r, driverList]) => {
+          setRace(r);
+          setName(`${r.name} Strategy`);
+          setFuelPerLap(String(r.fuel_per_lap));
+          setEnergyPerLap(String(r.energy_per_lap));
+          setTyreDegFL(String(r.tyre_deg_fl));
+          setTyreDegFR(String(r.tyre_deg_fr));
+          setTyreDegRL(String(r.tyre_deg_rl));
+          setTyreDegRR(String(r.tyre_deg_rr));
+
+          const derived = deriveLaps(driverList, r.duration_hours);
+          if (derived === null) setDerivedLapsNull(true);
+          const lapsValue = derived ? String(derived) : (r.estimated_total_laps ? String(r.estimated_total_laps) : '');
+          setEstimatedTotalLaps(lapsValue);
+        })
+        .catch(err => setError(err.message))
+        .finally(() => setLoading(false));
+    }
   }, [id]);
 
   async function handleCalculate(e) {
@@ -59,9 +94,15 @@ export default function StrategyCreate() {
         tyreDegRR: parseFloat(tyreDegRR),
         estimatedTotalLaps: laps,
       });
-      navigate(`/races/${id}/strategy/compare`, { state: { variants, formValues: { name, startTime, fuelPerLap, energyPerLap, tyreDegFL, tyreDegFR, tyreDegRL, tyreDegRR, estimatedTotalLaps } } });
+      const formValues = { name, startTime, fuelPerLap, energyPerLap, tyreDegFL, tyreDegFR, tyreDegRL, tyreDegRR, estimatedTotalLaps };
+      navigate(`/races/${id}/strategy/compare`, { state: { variants, formValues } });
     } catch (err) {
-      setError(err.message);
+      if (err.allInfeasible) {
+        const formValues = { name, startTime, fuelPerLap, energyPerLap, tyreDegFL, tyreDegFR, tyreDegRL, tyreDegRR, estimatedTotalLaps };
+        navigate(`/races/${id}/strategy/compare`, { state: { variants: [], allInfeasible: true, formValues } });
+      } else {
+        setError(err.message);
+      }
     } finally {
       setCalculating(false);
     }
@@ -99,6 +140,7 @@ export default function StrategyCreate() {
           <div className="form-group">
             <label>Est. Total Laps</label>
             <input type="number" data-testid="strategy-laps-input" value={estimatedTotalLaps} onChange={e => setEstimatedTotalLaps(e.target.value)} min="1" />
+            {derivedLapsNull && <span className="warning" data-testid="derived-laps-warning">No valid driver paces — enter laps manually</span>}
           </div>
         </div>
 

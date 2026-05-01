@@ -12,7 +12,11 @@ async function request(path, options = {}) {
   }
   if (res.status === 204) return null;
   const data = await res.json();
-  if (!res.ok) throw new Error(data.error || 'Request failed');
+  if (!res.ok) {
+    const err = new Error(data.error || 'Request failed');
+    err.allInfeasible = data.allInfeasible || false;
+    throw err;
+  }
   return data;
 }
 

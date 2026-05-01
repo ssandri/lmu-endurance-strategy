@@ -1,7 +1,7 @@
 const { test, describe } = require('node:test');
 const assert = require('node:assert');
 const { calculatePitTime, getRefuelTime } = require('../engine/pitTime');
-const { generateVariants, calculateStintLength } = require('../engine/strategy');
+const { generateVariants, calculateStintLength, calculateTyreChangeInterval } = require('../engine/strategy');
 
 describe('Pit Time Calculator', () => {
   test('refuel time matches appendix A1', () => {
@@ -72,10 +72,59 @@ describe('Strategy Engine', () => {
     assert(variants[1].stintLength >= variants[0].stintLength);
   });
 
-  test('feasibility flag when tyres insufficient', () => {
+  test('feasibility flag when tyres insufficient — all variants infeasible', () => {
     const race = { fuel_per_lap: 10, energy_per_lap: 0, tyre_deg_fl: 0, tyre_deg_fr: 0, tyre_deg_rl: 0, tyre_deg_rr: 0, estimated_total_laps: 200, available_tyres: 4 };
     const drivers = [{ id: 1, name: 'Alice', avg_lap_time_ms: 90000 }];
     const variants = generateVariants({ race, drivers, startTime: null, overrides: {} });
     assert.strictEqual(variants[0].feasible, false);
+    assert.strictEqual(variants[1].feasible, false);
+    assert.strictEqual(variants[2].feasible, false);
+  });
+
+  test('each variant gets its own independently computed tyreMultiplicity', () => {
+    const race = { fuel_per_lap: 3.5, energy_per_lap: 2, tyre_deg_fl: 1, tyre_deg_fr: 1, tyre_deg_rl: 1, tyre_deg_rr: 1, estimated_total_laps: 100, available_tyres: 32 };
+    const drivers = [{ id: 1, name: 'Alice', avg_lap_time_ms: 90000 }];
+    const variants = generateVariants({ race, drivers, startTime: null, overrides: {} });
+    for (const v of variants) {
+      assert(v.tyreMultiplicity >= 1 && v.tyreMultiplicity <= 3, `tyreMultiplicity should be 1-3, got ${v.tyreMultiplicity}`);
+      assert(typeof v.feasible === 'boolean');
+      assert(typeof v.totalPitTimeSec === 'number');
+    }
+  });
+});
+
+describe('calculateTyreChangeInterval', () => {
+  test('returns multiplicity 1 and feasible when all tyre degs are zero', () => {
+    // 7 pit stops, multiplicity 1: ceil(7/1)*4 = 28 <= 32 available
+    const result = calculateTyreChangeInterval(0, 0, 0, 0, 20, 32, 7);
+    assert.strictEqual(result.multiplicity, 1);
+    assert.strictEqual(result.feasible, true);
+  });
+
+  test('elevates multiplicity when stintLength exceeds tyreLapLimit', () => {
+    // maxTyreDeg = 4, tyreLapLimit = floor(60/4) = 15, stintLength = 30
+    // wearMultiplicity = ceil(30/15) = 2
+    const result = calculateTyreChangeInterval(4, 4, 4, 4, 30, 100, 10);
+    assert(result.multiplicity >= 2);
+    assert.strictEqual(result.feasible, true);
+  });
+
+  test('returns feasible true when multiplicity 3 satisfies tyre stock', () => {
+    // 20 pit stops, multiplicity 3: ceil(20/3)*4 = 7*4 = 28 tyres needed, 32 available
+    const result = calculateTyreChangeInterval(0, 0, 0, 0, 20, 32, 20);
+    assert.strictEqual(result.feasible, true);
+  });
+
+  test('returns feasible false when no valid multiplicity satisfies tyre stock', () => {
+    // 200 pit stops, max multiplicity 3: ceil(200/3)*4 = 68*4 = 272 > 4 available
+    const result = calculateTyreChangeInterval(0, 0, 0, 0, 20, 4, 200);
+    assert.strictEqual(result.feasible, false);
+    assert.strictEqual(result.multiplicity, 3);
+  });
+
+  test('returns feasible true for zero pit stops regardless of tyre stock', () => {
+    const result = calculateTyreChangeInterval(0, 0, 0, 0, 20, 4, 0);
+    assert.strictEqual(result.feasible, true);
+    assert.strictEqual(result.multiplicity, 1);
   });
 });
