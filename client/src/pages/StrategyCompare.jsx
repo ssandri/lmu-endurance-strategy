@@ -19,11 +19,29 @@ function formatPitTime(sec) {
   return `${s}s`;
 }
 
+function formatTimeSaved(diffSec) {
+  if (diffSec === null) return '—';
+  const abs = Math.abs(diffSec);
+  const m = Math.floor(abs / 60);
+  const s = Math.round(abs % 60);
+  const formatted = m > 0 ? `${m}m ${s}s` : `${s}s`;
+  if (diffSec > 0) return `−${formatted}`;
+  if (diffSec < 0) return `+${formatted}`;
+  return '—';
+}
+
+function formatTyreMultiplicity(m) {
+  if (m === 1) return 'Every stop';
+  if (m === 2) return 'Every 2nd stop';
+  return 'Every 3rd stop';
+}
+
 export default function StrategyCompare() {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
   const variants = location.state?.variants || [];
+  const allInfeasible = location.state?.allInfeasible || false;
   const formValues = location.state?.formValues || {};
   const [expanded, setExpanded] = useState(null);
   const [activating, setActivating] = useState(false);
@@ -44,10 +62,18 @@ export default function StrategyCompare() {
     return (
       <div className="strategy-compare" data-testid="strategy-compare-page">
         <h2>Strategy — Step 2: Compare</h2>
-        <p>No variants available. <button className="btn-secondary" onClick={() => navigate(`/races/${id}/strategy/new`)}>Go back</button></p>
+        {allInfeasible
+          ? <p data-testid="all-infeasible-message">No feasible strategy variant can be produced with the current tyre stock. Increase available tyres in the race settings or adjust tyre wear inputs.</p>
+          : <p>No variants available.</p>
+        }
+        <div className="form-actions">
+          <button className="btn-secondary" data-testid="back-to-step1" onClick={() => navigate(`/races/${id}/strategy/new`, { state: { formValues } })}>Back to Step 1</button>
+        </div>
       </div>
     );
   }
+
+  const baselinePitTimeSec = variants[0].totalPitTimeSec;
 
   return (
     <div className="strategy-compare" data-testid="strategy-compare-page">
@@ -61,17 +87,14 @@ export default function StrategyCompare() {
             <th>Pit Stops</th>
             <th>Avg Pace</th>
             <th>Time in pits (est.)</th>
-            <th>Feasibility</th>
+            <th>Time saved vs Normal</th>
+            <th>Tyre change every</th>
             <th>Action</th>
           </tr>
         </thead>
         <tbody>
           {variants.map((v, i) => {
-            const needed = v.requiredTyreSets != null ? v.requiredTyreSets * 4 : v.tyresUsed;
-            const available = v.availableTyres;
-            const shortfallText = needed != null && available != null
-              ? `Needs ${needed} tyres, ${available} available`
-              : 'Tyre shortage';
+            const timeSavedDiff = i === 0 ? null : baselinePitTimeSec - v.totalPitTimeSec;
 
             return (
               <React.Fragment key={v.id || i}>
@@ -81,13 +104,17 @@ export default function StrategyCompare() {
                   <td>{v.pitStops}</td>
                   <td>{formatLapTime(v.avgPace)}</td>
                   <td data-testid={`pit-time-${i}`}>{v.totalPitTimeSec != null ? formatPitTime(v.totalPitTimeSec) : '—'}</td>
-                  <td>{v.feasible ? <span className="badge active">Feasible</span> : <span className="badge warning" data-testid="feasibility-warning">{shortfallText}</span>}</td>
+                  <td data-testid={`time-saved-${i}`}>{formatTimeSaved(timeSavedDiff)}</td>
+                  <td data-testid={`tyre-change-every-${i}`}>{v.tyreMultiplicity != null ? formatTyreMultiplicity(v.tyreMultiplicity) : '—'}</td>
                   <td><button className="btn-primary btn-sm" data-testid={`activate-variant-${i}`} onClick={() => handleActivate(v.id)} disabled={activating}>Use this</button></td>
                 </tr>
                 {expanded === i && (
                   <tr className="detail-row" data-testid={`variant-detail-${i}`}>
-                    <td colSpan="7">
+                    <td colSpan="8">
                       <div className="stint-detail">
+                        {v.tyreMultiplicity != null && (
+                          <p className="tyre-change-info">Tyres changed {formatTyreMultiplicity(v.tyreMultiplicity).toLowerCase()}</p>
+                        )}
                         {v.fuelSaveTargets && (
                           <div className="fuel-save-targets" data-testid="fuel-save-targets">
                             <h4>Fuel Save Targets</h4>
@@ -96,7 +123,6 @@ export default function StrategyCompare() {
                             ))}
                           </div>
                         )}
-                        {!v.feasible && <div className="warning-box" data-testid="tyre-warning">Warning: Tyre supply insufficient. {shortfallText}.</div>}
                         <table className="stint-table" data-testid="stint-table">
                           <thead>
                             <tr><th>#</th><th>Driver</th><th>Start Lap</th><th>End Lap</th><th>Fuel Load</th><th>Tyre Change</th><th>Est. Start</th><th>Pit Time</th></tr>

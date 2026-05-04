@@ -139,6 +139,12 @@ Then('the estimated total laps should be {string}', async function (value) {
   expect(actual).toBe(value);
 });
 
+Then('the estimated total laps field should not be empty', async function () {
+  const actual = await this.page.getByTestId('strategy-laps-input').inputValue();
+  expect(actual).not.toBe('');
+  expect(parseInt(actual)).toBeGreaterThan(0);
+});
+
 Then('I should see a validation error for fuel per lap', async function () {
   await this.page.waitForTimeout(500);
   // Should still be on strategy creation page (not navigated to compare)
@@ -200,9 +206,15 @@ Then('I should see fuel save targets per driver', async function () {
 });
 
 Then('I should see a feasibility warning about tyre shortage', async function () {
-  // Look for warning box or badge with warning class
-  const warning = this.page.locator('.warning-box, .badge.warning');
-  await expect(warning.first()).toBeVisible({ timeout: 3000 });
+  // After the change: all-infeasible variants return a 422 and show the all-infeasible message.
+  // Accept either the legacy warning box/badge or the new all-infeasible message.
+  const allInfeasible = this.page.getByTestId('all-infeasible-message');
+  const legacyWarning = this.page.locator('.warning-box, .badge.warning');
+  try {
+    await allInfeasible.waitFor({ state: 'visible', timeout: 5000 });
+  } catch {
+    await expect(legacyWarning.first()).toBeVisible({ timeout: 3000 });
+  }
 });
 
 When('I click {string} on the {string} variant', async function (buttonText, variantName) {
