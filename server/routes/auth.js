@@ -1,11 +1,17 @@
 const { Router } = require('express');
 const bcrypt = require('bcrypt');
+const crypto = require('crypto');
 const db = require('../db');
 
 const router = Router();
 
 router.post('/register', async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, registrationCode } = req.body;
+  const expected = Buffer.from(process.env.REGISTRATION_CODE || '', 'utf8');
+  const provided = Buffer.from(registrationCode || '', 'utf8');
+  if (expected.length !== provided.length || !crypto.timingSafeEqual(expected, provided)) {
+    return res.status(403).json({ error: 'Invalid registration code' });
+  }
   if (!email || !password) {
     return res.status(400).json({ error: 'Email and password are required' });
   }

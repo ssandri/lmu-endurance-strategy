@@ -5,6 +5,11 @@ const path = require('path');
 
 require('./db/migrate');
 
+if (!process.env.REGISTRATION_CODE) {
+  console.error('FATAL: REGISTRATION_CODE environment variable is not set');
+  process.exit(1);
+}
+
 const authRoutes = require('./routes/auth');
 const racesRoutes = require('./routes/races');
 const strategiesRoutes = require('./routes/strategies');

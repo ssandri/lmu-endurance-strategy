@@ -7,7 +7,7 @@ Given('I am logged in as {string}', async function (email) {
   await fetch(`${this.apiUrl}/api/auth/register`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({ email, password, registrationCode: process.env.REGISTRATION_CODE || '' }),
   });
 
   // Login via API to get cookie
