@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { strategies } from '../api';
+import PageCard from '../components/PageCard';
+import StatusBadge from '../components/StatusBadge';
 
 function formatLapTime(ms) {
   if (!ms) return '—';
@@ -60,7 +62,7 @@ export default function StrategyCompare() {
 
   if (variants.length === 0) {
     return (
-      <div className="strategy-compare" data-testid="strategy-compare-page">
+      <PageCard className="strategy-compare" data-testid="strategy-compare-page">
         <h2>Strategy — Step 2: Compare</h2>
         {allInfeasible
           ? <p data-testid="all-infeasible-message">No feasible strategy variant can be produced with the current tyre stock. Increase available tyres in the race settings or adjust tyre wear inputs.</p>
@@ -69,14 +71,14 @@ export default function StrategyCompare() {
         <div className="form-actions">
           <button className="btn-secondary" data-testid="back-to-step1" onClick={() => navigate(`/races/${id}/strategy/new`, { state: { formValues } })}>Back to Step 1</button>
         </div>
-      </div>
+      </PageCard>
     );
   }
 
   const baselinePitTimeSec = variants[0].totalPitTimeSec;
 
   return (
-    <div className="strategy-compare" data-testid="strategy-compare-page">
+    <PageCard className="strategy-compare" data-testid="strategy-compare-page">
       <h2>Strategy — Step 2: Compare & Choose</h2>
 
       <table className="compare-table" data-testid="compare-table">
@@ -155,6 +157,6 @@ export default function StrategyCompare() {
       <div className="form-actions">
         <button className="btn-secondary" data-testid="back-to-step1" onClick={() => navigate(`/races/${id}/strategy/new`, { state: { formValues } })}>Back to Step 1</button>
       </div>
-    </div>
+    </PageCard>
   );
 }

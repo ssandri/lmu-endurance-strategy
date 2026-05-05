@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { races } from '../api';
 import { TRACKS } from '../constants';
+import PageCard from '../components/PageCard';
 
 export default function RaceCreate() {
   const navigate = useNavigate();
@@ -100,7 +101,7 @@ export default function RaceCreate() {
   }
 
   return (
-    <div className="race-create" data-testid="race-create-page">
+    <PageCard className="race-create" data-testid="race-create-page">
       <h2>Create New Race</h2>
       {error && <div className="error">{error}</div>}
       <form onSubmit={handleSubmit}>
@@ -189,6 +190,6 @@ export default function RaceCreate() {
           <button type="submit" className="btn-primary" data-testid="submit-race-btn">Create Race</button>
         </div>
       </form>
-    </div>
+    </PageCard>
   );
 }

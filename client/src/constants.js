@@ -1,3 +1,5 @@
+export const DRIVER_COLORS = ['#3b82f6', '#22c55e', '#f59e0b', '#8b5cf6', '#06b6d4', '#f97316'];
+
 export const TRACKS = [
   'Algarve International Circuit (Portimão)',
   'Autodromo Internazionale Enzo e Dino Ferrari (Imola)',
