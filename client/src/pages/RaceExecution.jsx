@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { races, stints as stintsApi, drivers as driversApi } from '../api';
+import { DRIVER_COLORS } from '../constants';
 
 const DAMAGE_OPTIONS = [
   { value: 'none', label: 'None' },
@@ -88,8 +89,7 @@ export default function RaceExecution() {
   const upcomingStints = futureStints.slice(1, 6);
 
   const driverColors = {};
-  const colors = ['#4f46e5', '#059669', '#d97706', '#dc2626', '#7c3aed', '#0891b2'];
-  driverList.forEach((d, i) => { driverColors[d.id] = colors[i % colors.length]; });
+  driverList.forEach((d, i) => { driverColors[d.id] = DRIVER_COLORS[i % DRIVER_COLORS.length]; });
 
   return (
     <div className="race-execution" data-testid="race-execution-page">

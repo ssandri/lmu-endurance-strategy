@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { races, strategies, drivers as driversApi } from '../api';
+import PageCard from '../components/PageCard';
 
 function deriveLaps(driverList, durationHours) {
   if (!driverList || driverList.length === 0) return null;
@@ -112,7 +113,7 @@ export default function StrategyCreate() {
   if (!race) return <div className="error">Race not found</div>;
 
   return (
-    <div className="strategy-create" data-testid="strategy-create-page">
+    <PageCard className="strategy-create" data-testid="strategy-create-page">
       <h2>Strategy — Step 1: Configure</h2>
       <p className="subtitle">Race: {race.name}</p>
       {error && <div className="error" data-testid="strategy-error">{error}</div>}
@@ -158,6 +159,6 @@ export default function StrategyCreate() {
           </button>
         </div>
       </form>
-    </div>
+    </PageCard>
   );
 }

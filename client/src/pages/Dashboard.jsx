@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { races } from '../api';
+import StatusBadge from '../components/StatusBadge';
 
 export default function Dashboard() {
   const [raceList, setRaceList] = useState([]);
@@ -50,9 +51,9 @@ export default function Dashboard() {
                 <span data-testid="race-drivers">{race.driver_count} driver{race.driver_count !== 1 ? 's' : ''}</span>
               </div>
               <div className="race-status">
-                <span className={race.has_active_strategy ? 'badge active' : 'badge'} data-testid="race-strategy-badge">
+                <StatusBadge variant={race.has_active_strategy ? 'active' : 'planned'} data-testid="race-strategy-badge">
                   {race.has_active_strategy ? 'Strategy Active' : 'No Strategy'}
-                </span>
+                </StatusBadge>
                 <span className="event-count" data-testid="race-events">{race.event_count} event{race.event_count !== 1 ? 's' : ''}</span>
               </div>
               <button
