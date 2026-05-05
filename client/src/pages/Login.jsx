@@ -4,6 +4,7 @@ import { auth } from '../api';
 export default function Login({ onLogin }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [registrationCode, setRegistrationCode] = useState('');
   const [isRegister, setIsRegister] = useState(false);
   const [error, setError] = useState('');
 
@@ -12,7 +13,7 @@ export default function Login({ onLogin }) {
     setError('');
     try {
       const user = isRegister
-        ? await auth.register(email, password)
+        ? await auth.register(email, password, registrationCode)
         : await auth.login(email, password);
       onLogin(user);
     } catch (err) {
@@ -29,6 +30,9 @@ export default function Login({ onLogin }) {
         <form onSubmit={handleSubmit}>
           <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required />
           <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} required minLength={6} />
+          {isRegister && (
+            <input type="text" placeholder="Registration Code" value={registrationCode} onChange={e => setRegistrationCode(e.target.value)} required data-testid="registration-code-input" />
+          )}
           <button type="submit">{isRegister ? 'Register' : 'Login'}</button>
         </form>
         <p className="toggle" onClick={() => setIsRegister(!isRegister)}>

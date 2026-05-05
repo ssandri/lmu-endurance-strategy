@@ -1,6 +1,8 @@
 const { test, describe, before, after } = require('node:test');
 const assert = require('node:assert');
 
+process.env.REGISTRATION_CODE = 'testcode';
+
 const BASE_URL = 'http://localhost:3001';
 
 describe('Auth API', () => {
@@ -15,7 +17,7 @@ describe('Auth API', () => {
     const res = await fetch(`${BASE_URL}/api/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: 'test@example.com', password: 'password123' }),
+      body: JSON.stringify({ email: 'test@example.com', password: 'password123', registrationCode: 'testcode' }),
     });
     assert.strictEqual(res.status, 201);
     const data = await res.json();
@@ -27,7 +29,7 @@ describe('Auth API', () => {
     const res = await fetch(`${BASE_URL}/api/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: 'test@example.com', password: 'password123' }),
+      body: JSON.stringify({ email: 'test@example.com', password: 'password123', registrationCode: 'testcode' }),
     });
     assert.strictEqual(res.status, 409);
   });
@@ -36,7 +38,38 @@ describe('Auth API', () => {
     const res = await fetch(`${BASE_URL}/api/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: 'short@example.com', password: '123' }),
+      body: JSON.stringify({ email: 'short@example.com', password: '123', registrationCode: 'testcode' }),
+    });
+    assert.strictEqual(res.status, 400);
+  });
+
+  test('POST /api/auth/register rejects missing registration code', async () => {
+    const res = await fetch(`${BASE_URL}/api/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: 'newuser@example.com', password: 'password123' }),
+    });
+    assert.strictEqual(res.status, 403);
+    const data = await res.json();
+    assert.strictEqual(data.error, 'Invalid registration code');
+  });
+
+  test('POST /api/auth/register rejects wrong registration code', async () => {
+    const res = await fetch(`${BASE_URL}/api/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: 'newuser@example.com', password: 'password123', registrationCode: 'wrongcode' }),
+    });
+    assert.strictEqual(res.status, 403);
+    const data = await res.json();
+    assert.strictEqual(data.error, 'Invalid registration code');
+  });
+
+  test('POST /api/auth/register with correct code but short password returns 400', async () => {
+    const res = await fetch(`${BASE_URL}/api/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: 'newuser@example.com', password: '123', registrationCode: 'testcode' }),
     });
     assert.strictEqual(res.status, 400);
   });
